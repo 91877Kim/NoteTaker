@@ -46,11 +46,11 @@ If a custom prompt is provided, follow its instructions for structure and focus.
     throw new Error("OpenAI returned invalid JSON. Try again.");
   }
 
-  let blocks: Array<{ blockKey?: string; sectionTitle?: string; content?: string; orderIndex?: number }>;
+  let blocks: unknown[];
   if (Array.isArray(parsed)) {
     blocks = parsed;
   } else if (parsed && typeof parsed === "object" && "blocks" in parsed && Array.isArray((parsed as { blocks: unknown }).blocks)) {
-    blocks = (parsed as { blocks: Array<unknown> }).blocks;
+    blocks = (parsed as { blocks: unknown[] }).blocks;
   } else {
     throw new Error("Invalid response format: expected { blocks: [...] } or array of blocks");
   }

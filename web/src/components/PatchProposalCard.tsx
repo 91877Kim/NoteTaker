@@ -1,5 +1,7 @@
 "use client";
 
+import { CitationChips } from "./CitationChip";
+
 type Patch = {
   id: string;
   targetBlockId: string | null;
@@ -12,10 +14,12 @@ type Patch = {
 
 export function PatchProposalCard({
   patch,
+  currentBlockContent,
   onAccept,
   onReject,
 }: {
   patch: Patch;
+  currentBlockContent?: string | null;
   onAccept: () => void;
   onReject: () => void;
 }) {
@@ -44,20 +48,30 @@ export function PatchProposalCard({
         )}
       </div>
       <p className="text-zinc-700 dark:text-zinc-300">{patch.rationale}</p>
-      <div className="rounded bg-white dark:bg-zinc-900 p-2 border border-zinc-200 dark:border-zinc-700">
-        <p className="text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">{patch.proposedText}</p>
-      </div>
-      {citations.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {citations.map((c: { page?: number; chunk_id?: string }, i: number) => (
-            <span
-              key={i}
-              className="text-xs px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400"
-            >
-              p{c.page ?? "?"}
-            </span>
-          ))}
+
+      {patch.patchType === "replace" && currentBlockContent != null && currentBlockContent.trim() !== "" ? (
+        <div className="rounded border border-zinc-200 dark:border-zinc-700 overflow-hidden text-sm">
+          <div className="grid grid-cols-2 gap-0 border-b border-zinc-200 dark:border-zinc-700">
+            <div className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-xs font-medium text-zinc-500">Current</div>
+            <div className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-xs font-medium text-zinc-500">Proposed</div>
+          </div>
+          <div className="grid grid-cols-2 gap-0 min-h-[60px]">
+            <div className="p-2 border-r border-zinc-200 dark:border-zinc-700 bg-red-50/30 dark:bg-red-950/10">
+              <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400 line-through">{currentBlockContent}</p>
+            </div>
+            <div className="p-2 bg-green-50/30 dark:bg-green-950/10">
+              <p className="whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">{patch.proposedText}</p>
+            </div>
+          </div>
         </div>
+      ) : (
+        <div className="rounded bg-white dark:bg-zinc-900 p-2 border border-zinc-200 dark:border-zinc-700">
+          <p className="text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap">{patch.proposedText}</p>
+        </div>
+      )}
+
+      {citations.length > 0 && (
+        <CitationChips citations={citations as Array<{ page?: number; chunk_id?: string }>} />
       )}
       <div className="flex gap-2 pt-1">
         <button

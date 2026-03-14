@@ -3,8 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { NoteEditor } from "@/components/NoteEditor";
 import { ChatPanel } from "@/components/ChatPanel";
+import { VersionHistoryDrawer } from "@/components/VersionHistoryDrawer";
+
+const PdfViewer = dynamic(
+  () => import("@/components/PdfViewer").then((m) => m.PdfViewer),
+  { ssr: false, loading: () => <div className="p-4 text-zinc-500 text-sm">Loading PDF…</div> }
+);
 
 type NoteBlock = {
   id: string;
@@ -22,6 +29,7 @@ type Note = {
 type Document = {
   id: string;
   title: string;
+  fileUrl: string;
 };
 type ChatThread = { id: string };
 
@@ -33,6 +41,7 @@ export default function WorkspacePage() {
   const [doc, setDoc] = useState<Document | null>(null);
   const [thread, setThread] = useState<ChatThread | null>(null);
   const [loading, setLoading] = useState(true);
+  const [versionDrawerOpen, setVersionDrawerOpen] = useState(false);
 
   const effectiveNoteId = note?.id ?? noteId;
   const refreshNote = useCallback(async () => {
@@ -108,11 +117,26 @@ export default function WorkspacePage() {
           ← {doc?.title ?? "Document"}
         </Link>
         <h1 className="text-sm font-medium truncate max-w-md">{note.title}</h1>
-        <div className="w-20" />
+        <button
+          type="button"
+          onClick={() => setVersionDrawerOpen(true)}
+          className="text-xs px-2 py-1 rounded border border-zinc-300 dark:border-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+        >
+          History
+        </button>
       </header>
 
       <div className="flex-1 flex min-h-0">
-        <aside className="w-56 flex-shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-auto">
+        <aside className="w-72 flex-shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col overflow-hidden">
+          <div className="flex-shrink-0 p-2 border-b border-zinc-200 dark:border-zinc-800">
+            <h2 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">PDF</h2>
+          </div>
+          <div className="flex-1 min-h-0">
+            <PdfViewer fileUrl={doc?.fileUrl ?? ""} />
+          </div>
+        </aside>
+
+        <aside className="w-48 flex-shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-auto">
           <nav className="p-3">
             <h2 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Outline</h2>
             <ul className="space-y-1">
@@ -137,13 +161,24 @@ export default function WorkspacePage() {
 
           <div className="w-96 flex-shrink-0 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col">
             {thread ? (
-              <ChatPanel threadId={thread.id} noteId={note.id} onPatchResolved={refreshNote} />
+              <ChatPanel
+                threadId={thread.id}
+                noteId={note.id}
+                note={note}
+                onPatchResolved={refreshNote}
+              />
             ) : (
               <div className="p-4 text-zinc-500 text-sm">Loading chat…</div>
             )}
           </div>
         </div>
       </div>
+
+      <VersionHistoryDrawer
+        noteId={note.id}
+        open={versionDrawerOpen}
+        onClose={() => setVersionDrawerOpen(false)}
+      />
     </div>
   );
 }

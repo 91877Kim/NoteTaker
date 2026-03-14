@@ -5,12 +5,13 @@
 
 ## Done
 - Next.js app scaffold (App Router, TypeScript, Tailwind) in `web/`
-- **Mocked flow (first task):**
-  - Dashboard: upload (title only), document list
-  - Document detail: generate note, link to workspace
-  - Reading workspace: 3-pane (outline | note editor | chat)
-  - API: upload, generate-note, chat/message, patches accept/reject, notes
-  - PatchProposalCard with Accept/Reject in chat
+- **Full flow (mocked + real AI):**
+  - Dashboard: upload, document list, settings (note generation prompt)
+  - Document detail: generate note, rename, delete, link to workspace
+  - Reading workspace: 4-pane (PDF viewer | outline | note editor | chat)
+  - API: upload, generate-note, chat/message, patches accept/reject, documents PATCH/DELETE
+  - PatchProposalCard: Accept/Reject, diff preview for replace patches, CitationChips
+  - Version history drawer (History button in workspace header)
   - No auth (hardcoded mock user)
 - Prisma + **SQLite** (no Postgres): `prisma/schema.prisma`, migrations applied, `dev.db` created
 - All core models: User, Document, DocumentChunk, Note, NoteBlock, NoteVersion, ChatThread, ChatMessage, PatchProposal

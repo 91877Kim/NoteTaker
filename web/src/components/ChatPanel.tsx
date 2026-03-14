@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { PatchProposalCard } from "./PatchProposalCard";
 
+type NoteBlock = { id: string; blockKey: string; content: string };
+type Note = { blocks: NoteBlock[] };
 type Message = { id: string; role: string; content: string };
 type Patch = {
   id: string;
@@ -17,10 +19,12 @@ type Patch = {
 export function ChatPanel({
   threadId,
   noteId,
+  note,
   onPatchResolved,
 }: {
   threadId: string;
   noteId: string;
+  note?: Note | null;
   onPatchResolved?: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -119,6 +123,11 @@ export function ChatPanel({
           <PatchProposalCard
             key={p.id}
             patch={p}
+            currentBlockContent={
+              p.targetBlockId && note
+                ? note.blocks.find((b) => b.blockKey === p.targetBlockId || b.id === p.targetBlockId)?.content
+                : undefined
+            }
             onAccept={() => acceptPatch(p.id)}
             onReject={() => rejectPatch(p.id)}
           />
