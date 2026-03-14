@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String       @id @default(cuid())
+  email     String       @unique
+  documents Document[]
+  notes     Note[]       @relation("UserNotes")
+  threads   ChatThread[]
+  createdAt DateTime     @default(now())
+}
+
+model Document {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  title     String
+  fileUrl   String
+  status    DocumentStatus
+  pageCount Int?
+  chunks    DocumentChunk[]
+  notes     Note[]
+  threads   ChatThread[]
+  createdAt DateTime        @default(now())
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id])
+  pageNumber Int?
+  content    String
+  // For SQLite, store embeddings as JSON for now.
+  embedding  Json?
+  chunkIndex Int
+}
+
+model Note {
+  id          String        @id @default(cuid())
+  documentId  String
+  document    Document      @relation(fields: [documentId], references: [id])
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], name: "UserNotes")
+  title       String
+  currentJson Json
+  versions    NoteVersion[]
+  blocks      NoteBlock[]
+  patchProposals PatchProposal[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model NoteBlock {
+  id           String   @id @default(cuid())
+  noteId       String
+  note         Note     @relation(fields: [noteId], references: [id])
+  blockKey     String
+  sectionTitle String?
+  content      String
+  orderIndex   Int
+  fontFamily   String?  @default("inherit")
+}
+
+model NoteVersion {
+  id          String   @id @default(cuid())
+  noteId      String
+  note        Note     @relation(fields: [noteId], references: [id])
+  versionNum  Int
+  snapshotJson Json
+  createdAt   DateTime @default(now())
+}
+
+model ChatThread {
+  id         String        @id @default(cuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id])
+  documentId String
+  document   Document      @relation(fields: [documentId], references: [id])
+  messages   ChatMessage[]
+  patchProposals PatchProposal[]
+  createdAt  DateTime      @default(now())
+}
+
+model ChatMessage {
+  id        String     @id @default(cuid())
+  threadId  String
+  thread    ChatThread @relation(fields: [threadId], references: [id])
+  role      String
+  content   String
+  createdAt DateTime   @default(now())
+}
+
+model PatchProposal {
+  id            String      @id @default(cuid())
+  noteId        String
+  note          Note        @relation(fields: [noteId], references: [id])
+  threadId      String?
+  thread        ChatThread? @relation(fields: [threadId], references: [id])
+  targetBlockId String?
+  patchType     String
+  rationale     String
+  proposedText  String
+  citationsJson Json
+  status        PatchStatus
+  createdAt     DateTime    @default(now())
+}
+
+enum DocumentStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum PatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
